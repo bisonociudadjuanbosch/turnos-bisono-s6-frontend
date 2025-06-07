@@ -127,7 +127,7 @@
       botones.style.display = "block";
 
       // Envía la imagen al backend para guardar y obtener URL pública
-      const response = await fetch('https://tu-app.onrender.com/upload-turno', {
+      const response = await fetch('https://turnos-bisono-sembrador6-v2n2.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64image })
