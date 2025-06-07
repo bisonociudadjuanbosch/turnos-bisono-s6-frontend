@@ -5,8 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Turno - Constructora Bisonó</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- html2canvas para capturar el ticket como imagen -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+      background-color: #f9f9f9;
+    }
+
+    .ticket {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .turno-grande {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .botones {
+      margin-top: 20px;
+    }
+
+    .botones button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .botones button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
+
   <div id="ticket" class="ticket">
     <h1>Constructora Bisonó</h1>
     <p>Calle Olof Palme, esquina Av. Luperón, Distrito Nacional, República Dominicana</p>
@@ -26,6 +73,50 @@
     <button onclick="location.href='admin.html'">Panel de Administración</button>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    let turnoActual = 0;
+
+    function generarTurno() {
+      turnoActual++;
+      const numero = "T-" + turnoActual.toString().padStart(4, "0");
+      document.getElementById("numero-turno").innerText = numero;
+
+      const ahora = new Date();
+      const fechaHora = ahora.toLocaleString();
+      document.getElementById("fecha-hora").innerText = "Fecha y hora: " + fechaHora;
+
+      document.getElementById("en-espera").innerText = Math.max(0, turnoActual - 1);
+    }
+
+    function descargar() {
+      const ticket = document.getElementById("ticket");
+      const botones = document.querySelectorAll(".botones");
+
+      // Ocultar botones temporalmente
+      botones.forEach(b => b.style.display = "none");
+
+      html2canvas(ticket, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      }).then(canvas => {
+        // Restaurar visibilidad
+        botones.forEach(b => b.style.display = "block");
+
+        const link = document.createElement("a");
+        link.download = "turno.jpg";
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
+        link.click();
+      });
+    }
+
+    function compartirWhatsApp() {
+      const turno = document.getElementById("numero-turno").innerText;
+      const mensaje = encodeURIComponent(`¡Hola! Ya tienes tu ${turno} asignado en Constructora Bisonó. Por favor, acércate a la oficina. 🏡📄`);
+      const url = `https://wa.me/?text=${mensaje}`;
+      window.open(url, "_blank");
+    }
+  </script>
+
 </body>
 </html>
+
