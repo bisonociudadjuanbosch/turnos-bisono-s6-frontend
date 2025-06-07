@@ -47,6 +47,12 @@
     .botones button:hover {
       background-color: #0056b3;
     }
+
+    #resultado {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -74,79 +80,87 @@
     <button onclick="location.href='admin.html'">Panel de Administración</button>
   </div>
 
+  <div id="resultado"></div>
+
   <script>
-  let turnoActual = 0;
+    let turnoActual = 0;
 
-  function generarTurno() {
-    turnoActual++;
-    const numero = "T-" + turnoActual.toString().padStart(4, "0");
-    document.getElementById("numero-turno").innerText = numero;
+    function generarTurno() {
+      turnoActual++;
+      const numero = "T-" + turnoActual.toString().padStart(4, "0");
+      document.getElementById("numero-turno").innerText = numero;
 
-    const ahora = new Date();
-    const fechaHora = ahora.toLocaleString("es-DO", {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-    document.getElementById("fecha-hora").innerText = "Fecha y hora: " + fechaHora;
-
-    document.getElementById("en-espera").innerText = Math.max(0, turnoActual - 1);
-  }
-
-  function descargar() {
-    const ticket = document.getElementById("ticket");
-    const botones = document.querySelector(".botones");
-
-    botones.style.display = "none";
-
-    html2canvas(ticket, {
-      backgroundColor: "#ffffff",
-      scale: 2
-    }).then(canvas => {
-      botones.style.display = "block";
-
-      const link = document.createElement("a");
-      link.download = "turno.jpg";
-      link.href = canvas.toDataURL("image/jpeg", 1.0);
-      link.click();
-    });
-  }
-
-  async function compartirWhatsApp() {
-    const ticket = document.getElementById("ticket");
-    const botones = document.querySelector(".botones");
-
-    // Ocultar botones para que no aparezcan en la captura
-    botones.style.display = "none";
-
-    try {
-      // Captura la imagen con html2canvas
-      const canvas = await html2canvas(ticket, { backgroundColor: "#ffffff", scale: 2 });
-      const base64image = canvas.toDataURL("image/jpeg", 1.0);
-
-      // Mostrar botones nuevamente
-      botones.style.display = "block";
-
-      // Envía la imagen al backend para guardar y obtener URL pública
-      const response = await fetch('https://turnos-bisono-sembrador6-v2n2.onrender.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64image })
+      const ahora = new Date();
+      const fechaHora = ahora.toLocaleString("es-DO", {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
       });
+      document.getElementById("fecha-hora").innerText = "Fecha y hora: " + fechaHora;
 
-      if (!response.ok) throw new Error('Error al subir la imagen');
-
-      const data = await response.json();
-
-      // Construye el mensaje con la URL de la imagen
-      const mensaje = encodeURIComponent(`¡Hola! Ya tienes tu turno asignado en Constructora Bisonó. Aquí está tu turno: ${data.url}`);
-      const url = `https://wa.me/?text=${mensaje}`;
-      window.open(url, "_blank");
-
-    } catch (error) {
-      botones.style.display = "block";
-      alert("No se pudo compartir por WhatsApp: " + error.message);
+      document.getElementById("en-espera").innerText = Math.max(0, turnoActual - 1);
     }
-  }
+
+    function descargar() {
+      const ticket = document.getElementById("ticket");
+      const botones = document.querySelector(".botones");
+
+      botones.style.display = "none";
+
+      html2canvas(ticket, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      }).then(canvas => {
+        botones.style.display = "block";
+
+        const link = document.createElement("a");
+        link.download = "turno.jpg";
+        link.href = canvas.toDataURL("image/jpeg", 1.0);
+        link.click();
+      });
+    }
+
+    async function compartirWhatsApp() {
+      const ticket = document.getElementById("ticket");
+      const botones = document.querySelector(".botones");
+      const resultado = document.getElementById("resultado");
+
+      botones.style.display = "none";
+
+      try {
+        // Captura el contenido del ticket como imagen
+        const canvas = await html2canvas(ticket, { backgroundColor: "#ffffff", scale: 2 });
+        const base64image = canvas.toDataURL("image/jpeg", 1.0);
+
+        // Enviar imagen al backend
+        const response = await fetch("https://turnos-bisono-sembrador6-v2n2.onrender.com/upload-turno", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ image: base64image })
+        });
+
+        if (!response.ok) throw new Error("Error al subir la imagen");
+
+        const data = await response.json();
+
+        // Mostrar resultado con enlace directo
+        resultado.innerHTML = `
+          <p>Tu imagen está disponible en:</p>
+          <a href="${data.url}" target="_blank">${data.url}</a>
+        `;
+
+        // Abrir WhatsApp con el mensaje prellenado
+        const mensaje = encodeURIComponent(`¡Hola! Ya tienes tu turno asignado en Constructora Bisonó. Aquí está tu turno: ${data.url}`);
+        const url = `https://wa.me/?text=${mensaje}`;
+        window.open(url, "_blank");
+
+      } catch (error) {
+        alert("No se pudo compartir por WhatsApp: " + error.message);
+      } finally {
+        botones.style.display = "block";
+      }
+    }
   </script>
 
 </body>
