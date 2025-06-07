@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Turno - Constructora Bisonó</title>
   <link rel="stylesheet" href="style.css" />
-
-  <!-- html2canvas para capturar el ticket como imagen -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -56,16 +53,16 @@
 
   <div id="ticket" class="ticket">
     <h1>Constructora Bisonó</h1>
-    <p>Calle Olof Palme, esquina Av. Luperón, Distrito Nacional, República Dominicana</p>
-    <p>809-548-6353</p>
-    <br>
-    <br>
-    <h3>Residencial El Sembrador VI</h3>
-    <p>Ciudad Juan Bosch, Santo Domingo Este</p>
+    <p><strong>Calle Olof Palme, esquina Av. Luperón</strong><br>
+    Distrito Nacional, República Dominicana<br>
+    Tel: 809-548-6353</p>
 
-    <h2>TURNO</h2>
+    <h3 style="margin-top: 20px;">Residencial El Sembrador VI</h3>
+    <p><strong>Ciudad Juan Bosch</strong><br>Santo Domingo Este</p>
+
+    <h2 style="margin-top: 30px;">TURNO</h2>
     <div id="numero-turno" class="turno-grande">T-0000</div>
-    <div id="fecha-hora"></div>
+    <div id="fecha-hora" style="margin-bottom: 10px;"></div>
     <p>Cantidad de personas en espera: <span id="en-espera">0</span></p>
   </div>
 
@@ -86,7 +83,10 @@
       document.getElementById("numero-turno").innerText = numero;
 
       const ahora = new Date();
-      const fechaHora = ahora.toLocaleString();
+      const fechaHora = ahora.toLocaleString("es-DO", {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
       document.getElementById("fecha-hora").innerText = "Fecha y hora: " + fechaHora;
 
       document.getElementById("en-espera").innerText = Math.max(0, turnoActual - 1);
@@ -94,17 +94,17 @@
 
     function descargar() {
       const ticket = document.getElementById("ticket");
-      const botones = document.querySelectorAll(".botones");
+      const botones = document.querySelector(".botones");
 
       // Ocultar botones temporalmente
-      botones.forEach(b => b.style.display = "none");
+      botones.style.display = "none";
 
       html2canvas(ticket, {
         backgroundColor: "#ffffff",
         scale: 2
       }).then(canvas => {
         // Restaurar visibilidad
-        botones.forEach(b => b.style.display = "block");
+        botones.style.display = "block";
 
         const link = document.createElement("a");
         link.download = "turno.jpg";
@@ -115,7 +115,7 @@
 
     function compartirWhatsApp() {
       const turno = document.getElementById("numero-turno").innerText;
-      const mensaje = encodeURIComponent(`¡Hola! Ya tienes tu ${turno} asignado en Constructora Bisonó. Por favor, acércate a la oficina. 🏡📄`);
+      const mensaje = encodeURIComponent(`¡Hola! Ya tienes tu ${turno} asignado en Constructora Bisonó. Por favor, acércate a la oficina en Ciudad Juan Bosch. 🏡📄`);
       const url = `https://wa.me/?text=${mensaje}`;
       window.open(url, "_blank");
     }
@@ -123,4 +123,3 @@
 
 </body>
 </html>
-
