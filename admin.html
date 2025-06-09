@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -34,7 +34,7 @@
   </table>
 
   <script>
-    const API = location.origin; // usar dominio actual (funciona local o en Render)
+    const API = location.origin;
 
     async function obtenerTurnos() {
       const tabla = document.querySelector("#tabla-turnos tbody");
@@ -54,21 +54,21 @@
         data.resultados.forEach(turno => {
           const fila = document.createElement("tr");
           fila.innerHTML = `
-            <td>${turno.numero}</td>
-            <td>${turno.etapa}</td>
+            <td class="col-numero">${turno.numero}</td>
+            <td class="col-estado">${turno.etapa}</td>
             <td>
               <select class="nuevo-estado">
                 <option value="Pendiente">Pendiente</option>
-                <option value="Visitando Apartamentos Modelo">Visitando Apartamentos Modelo</option>
+                <option value="Visitando Apartamento Modelo">Visitando Apartamento Modelo</option>
                 <option value="Precalificando con el Banco">Precalificando con el Banco</option>
-                <option value="OK">OK</option>
                 <option value="En Proceso">En Proceso</option>
+                <option value="OK">OK</option>
                 <option value="Finalizado">Finalizado</option>
               </select>
             </td>
-            <td><button class="cambiar-estado">Cambiar</button></td>
+            <td><button class="cambiar-estado">✔️</button></td>
             <td>${turno.telefono}</td>
-            <td><button class="enviar-wsp">Enviar</button></td>
+            <td><button class="enviar-wsp">📤</button></td>
             <td class="resultado"></td>
           `;
           tabla.appendChild(fila);
@@ -79,10 +79,10 @@
       }
     }
 
-    document.addEventListener("click", async e => {
+    document.addEventListener("click", async (e) => {
       if (e.target.classList.contains("cambiar-estado")) {
         const fila = e.target.closest("tr");
-        const numero = fila.children[0].textContent;
+        const numero = fila.querySelector(".col-numero").textContent;
         const nuevaEtapa = fila.querySelector(".nuevo-estado").value;
         const resultado = fila.querySelector(".resultado");
 
@@ -92,12 +92,16 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ numero, nuevaEtapa })
           });
+
           const data = await res.json();
-          if (data.error) throw new Error(data.error);
-          fila.children[1].textContent = nuevaEtapa;
-          resultado.textContent = "✅ Actualizado";
+          if (res.ok) {
+            fila.querySelector(".col-estado").textContent = nuevaEtapa;
+            resultado.textContent = "✅ Etapa actualizada";
+          } else {
+            resultado.textContent = "❌ " + (data.error || "Error al actualizar");
+          }
         } catch (err) {
-          resultado.textContent = "❌ " + err.message;
+          resultado.textContent = "❌ Error de red";
         }
       }
 
@@ -107,22 +111,26 @@
         const resultado = fila.querySelector(".resultado");
 
         try {
-          const res = await fetch("https://graph.facebook.com/v19.0/18096690177/messages", {
+          const res = await fetch("https://graph.facebook.com/v19.0/508852171945366/messages", {
             method: "POST",
             headers: {
-              Authorization: "Bearer SK_TOKEN", // reemplaza por tu token real
+              "Authorization": "Bearer sk_33ed3140aca24e4c98cd75b52b5c7722", // ← tu token real aquí
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
               messaging_product: "whatsapp",
               to: telefono,
               type: "text",
-              text: { body: "¡Hola! ya está tu turno. Por favor acércate." }
+              text: { body: "¡Hola! es tu turno, por favor acércate a nuestro Oficial de Ventas Bisonó." }
             })
           });
+
           const data = await res.json();
-          if (data.error) throw new Error(data.error.message || "Error al enviar");
-          resultado.textContent = "📤 WhatsApp enviado";
+          if (res.ok && !data.error) {
+            resultado.textContent = "📤 WhatsApp enviado";
+          } else {
+            throw new Error(data.error?.message || "Error al enviar mensaje");
+          }
         } catch (err) {
           resultado.textContent = "❌ " + err.message;
         }
