@@ -1,68 +1,25 @@
-document.addEventListener("DOMContentLoaded", obtenerTurnos);
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("cambiar-estado")) {
+    const fila = e.target.closest("tr");
+    const numero = fila.cells[0].textContent;
+    const nuevaEtapa = fila.querySelector(".nuevo-estado").value;
+    const resultado = fila.querySelector(".resultado");
 
-const safe = (str) => String(str || "").replace(/[&<>"']/g, s => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-}[s]));
-
-async function obtenerTurnos() {
-  const tabla = document.querySelector("#tabla-turnos tbody");
-  tabla.innerHTML = "<tr><td colspan='7'>Cargando turnos...</td></tr>";
-
-  try {
-    const res = await fetch("https://turnos-bisono-sembrador6-v2n2.onrender.com/turnos");
-    const text = await res.text();
-
-    let turnos;
     try {
-      const data = JSON.parse(text);
-      if (!Array.isArray(data.resultados)) throw new Error("Respuesta no válida del servidor");
-      turnos = data.resultados;
-    } catch {
-      throw new Error("Respuesta no es un JSON válido: " + text);
+      const res = await fetch("https://turnos-bisono-sembrador6-v2n2.onrender.com/cambiar-etapa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero, nuevaEtapa })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        resultado.textContent = "✅ Etapa actualizada";
+      } else {
+        resultado.textContent = "❌ " + (data.error || "Error");
+      }
+    } catch (err) {
+      resultado.textContent = "❌ Error al conectar con el servidor";
     }
-
-    if (turnos.length === 0) {
-      tabla.innerHTML = "<tr><td colspan='7'>No hay turnos registrados.</td></tr>";
-      return;
-    }
-
-    tabla.innerHTML = "";
-
-    turnos.forEach(turno => {
-      const fila = document.createElement("tr");
-
-      const opcionesEstado = [
-        "Pendiente",
-        "Visitando Apartamentos Modelo",
-        "Precalificando con el Banco",
-        "OK",
-        "En Proceso",
-        "Finalizado"
-      ];
-
-      const opciones = opcionesEstado.map(estado =>
-        `<option value="${estado}" ${turno.etapa === estado ? "selected" : ""}>${estado}</option>`
-      ).join("");
-
-      fila.innerHTML = `
-        <td>${safe(turno.numero)}</td>
-        <td>${safe(turno.etapa)}</td>
-        <td>
-          <select class="nuevo-estado">
-            ${opciones}
-          </select>
-        </td>
-        <td><button class="cambiar-estado">Cambiar</button></td>
-        <td>${safe(turno.telefono)}</td>
-        <td><button class="enviar-wsp">Enviar</button></td>
-        <td class="resultado"></td>
-      `;
-
-      tabla.appendChild(fila);
-    });
-
-  } catch (error) {
-    console.error("Error al obtener turnos:", error);
-    tabla.innerHTML = `<tr><td colspan='7' class='error'>❌ Error al cargar turnos: ${error.message}</td></tr>`;
   }
-}
+});
