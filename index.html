@@ -165,13 +165,33 @@
       });
     }
 
-    function compartirWhatsApp() {
-      const turno = document.getElementById("numero-turno").innerText;
-      const nombre = document.getElementById("nombre").value.trim();
-      const mensaje = encodeURIComponent(`¡Hola ${nombre}! Ya tienes tu ${turno} asignado en Constructora Bisonó. Por favor, acércate a la oficina en Ciudad Juan Bosch. 🏡📄`);
-      const url = `https://wa.me/?text=${mensaje}`;
-      window.open(url, "_blank");
-    }
+   function compartirWhatsApp() {
+  const ticket = document.getElementById("ticket");
+
+  html2canvas(ticket).then(canvas => {
+    const imagenBase64 = canvas.toDataURL("image/jpeg", 1.0);
+
+    fetch("https://turnos-bisono-sembrador6-v2n2.onrender.com/subir-imagen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imagen: imagenBase64 })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.url) {
+        const mensaje = `¡Hola! Aquí tienes tu turno para Constructora Bisonó:\n${data.url}`;
+        const whatsappURL = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+        window.open(whatsappURL, "_blank");
+      } else {
+        alert("No se pudo subir la imagen.");
+      }
+    })
+    .catch(err => {
+      alert("Error al compartir imagen.");
+      console.error(err);
+    });
+  });
+}
   </script>
 
 </body>
